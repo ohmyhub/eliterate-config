@@ -1,7 +1,7 @@
 #+title: Eliterate Config
 #+author: Kevin Ward
 #+email: mail@kevinward.xyz
-#+modified: [2022-09-11 Sun 15:58]
+#+modified: [2022-09-11 Sun 16:31]
 :drawer:
 #+options: title:nil H:4 toc:nil
 #+html: <p align="center"><img src="misc/unbridled-unicorn.png" width=300 height=300/></p>
@@ -552,20 +552,6 @@ Also immediately enables `mixed-pitch-modes' if currently in one of the modes."
 (setq evil-insert-state-cursor '("yellow" bar))
 #+end_src
 
-**** Centaur Tabs
-+ I like tab buffers but I wanted to add my own little design flair to the tab
-  icons. This changes the icons used for closing a tab and for showing when a
-  buffer has unsaved changes.
-#+begin_src emacs-lisp :tangle yes
-;; tweak those tabs
-(after! centaur-tabs
-  (setq centaur-tabs-height 36
-        centaur-tabs-close-button ""
-        centaur-tabs-modified-marker ""
-        centaur-tabs-set-bar 'over
-        centaur-tabs-gray-out-icons 'buffer))
-#+end_src
-
 **** Rainbow Mode
 + Hexcodes are colorized with the rainbow-mode package. Rainbow-mode is hooked
   into org-mode and all programming modes.
@@ -988,49 +974,6 @@ Also immediately enables `mixed-pitch-modes' if currently in one of the modes."
 ;; org-glossary
 (use-package! org-glossary
   :hook (org-mode . org-glossary-mode))
-#+end_src
-
-*** Dirvish
-+ A file manager that replaces dired. It's supposed to be better than dired or
-  ranger.
-#+begin_src elisp :tangle no
-(setq dired-kill-when-opening-new-dired-buffer t) ; added in emacs 28
-(setq dired-clean-confirm-killing-deleted-buffers nil)
-
-(use-package dirvish
-  :init
-  (dirvish-override-dired-mode)
-  :custom
-  ;; Go back home? Just press `bh'
-  (dirvish-bookmark-entries
-   '(("h" "~/"                          "Home")
-     ("d" "~/Downloads/"                "Downloads")
-     ("c" "~/.config/"                  "Config")
-     ("t" "~/.local/share/Trash/files/" "TrashCan")))
-  (dirvish-header-line-format '(:left (path) :right (free-space)))
-  (dirvish-mode-line-format ; it's ok to place string inside
-   '(:left (sort file-time " " file-size symlink) :right (omit yank index)))
-  ;; Don't worry, Dirvish is still performant even you enable all these attributes
-  (dirvish-attributes '(all-the-icons file-size collapse subtree-state vc-state git-msg))
-  ;; Maybe the icons are too big to your eyes
-  (dirvish-all-the-icons-height 0.8)
-  ;; In case you want the details at startup like `dired'
-  ;; (dirvish-hide-details nil)
-  :config
-  ;;(dirvish-peek-mode)
-  ;; Dired options are respected except a few exceptions, see *In relation to Dired* section above
-  (setq dired-dwim-target t)
-  (setq delete-by-moving-to-trash t)
-  ;; Enable mouse drag-and-drop files to other applications
-  (setq dired-mouse-drag-files t)                   ; added in Emacs 29
-  (setq mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
-  ;; Make sure to use the long name of flags when exists
-  ;; eg. use "--almost-all" instead of "-A"
-  ;; Otherwise some commands won't work properly
-  (setq dired-listing-switches
-        "-l --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group")
-  :bind
-  ("C-c f" . dirvish-fd))
 #+end_src
 
 *** Treemacs
