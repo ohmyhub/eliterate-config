@@ -1,0 +1,1103 @@
+#+title: Eliterate Config
+#+author: Kevin Ward
+#+email: mail@kevinward.xyz
+#+modified: [2022-09-11 Sun 15:58]
+:drawer:
+#+options: title:nil H:4 toc:nil
+#+html: <p align="center"><img src="misc/unbridled-unicorn.png" width=300 height=300/></p>
+#+html: <p align="center"><a href="https://orgmode.org"><img src="https://img.shields.io/badge/Org-literate%20config-%2377aa99?style=flat-square&logo=org&logoColor=white"></a></p>
+#+html: <p align="center"><a href="https://codeberg.org/ohmyberg/.lapdots/src/branch/main/.doom.d/config.org"><img src="https://img.shields.io/badge/THIS%20IS%20A%20BIG%20COLORFUL%20BADGE%20THAT%20DOES%20NOTHING-orange?style=for-the-badge&labelColor=orange"></a></p>
+:end:
+
+* _Eliterate Config: A hot mess_
+I am not an organized person. The system I use to organize my life is based
+around loosely categorized piles. However, I find literate programming
+fascinating and I decided try the literate configuration approach to Emacs.
+Thank you to all the individuals who have crafted some amazing literate configs
+that I have the benefit of stealing bits and pieces from. People like:
++ [[https://github.com/tecosaur/emacs-config/blob/master/config.org][@tecosaur]]
++ [[https://github.com/elken/.doom.d][@elken]]
++ [[https://github.com/zzamboni/dot-doom][@zzamboni]]
++ [[https://github.com/jeetelongname/dotfiles/blob/master/config/linked/doom/config.org][@jeetelongname]]
+and many others I'm sure I've forgotten about. Also, thank you Henrik Lissner
+for the time and effort you have spent developing the delightful Doom Emacs. I
+use primary use Emacs as a note taking platform for work and D&D campaigns. From
+time to time I'll do some actually coding in it but generally speaking I'm
+someone who aspires to be a programming /hobbyist/.
+
+What you are about to witness is a perpetual work in progress. It won't be
+pretty, but it might be interesting.
+
+** _The Basics_
+*** Step One
++ Make this file run (slightly) faster with lexical binding (see [[https://nullprogram.com/blog/2016/12/22/][this blog post]]
+  for more info).
+#+begin_src emacs-lisp :tangle yes
+;;; config.el -*- lexical-binding: t; -*-
+#+end_src
+
+*** Personal Information
++ Who am I? This is used by GPG and all sorts of other things.
+#+begin_src emacs-lisp :tangle yes
+;; user info
+(setq user-full-name "Kevin Ward"
+      user-mail-address "mail@kevinward.xyz")
+#+end_src
+
++ I've had some issues with GPG and epa that I hope will be resolved by the
+  following settings.
+#+begin_src emacs-lisp :tangle yes
+(setq auth-source-cache-expiry 86400
+      password-cache-expiry 86400)
+#+end_src
+
+** _Quality of Life Improvements_
+*** Better Defaults
++ Where is my org directory located? This is a little out of place but it needs
+  to be set before org loads.
+#+begin_src emacs-lisp :tangle yes
+;; where the org at?
+(setq org-directory "~/Dropbox/Org/")
+#+end_src
+
++ This might as well go here. At the moment I only use roam for daily
+  journaling. Someday I might get around to using more of it's functionality.
+#+begin_src emacs-lisp :tangle yes
+;; where ever I may roam
+(setq org-roam-directory "~/Dropbox/Roam/")
+(setq org-roam-dailies-directory "daily/")
+
+(setq org-roam-dailies-capture-templates
+      '(("d" "default" entry
+         "* %?"
+         :target (file+head "%<%Y-%m-%d>.org"
+                            "#+title: %<%Y-%m-%d>\n"))))
+#+end_src
+
++ I'm also not a fan of the long string of numbers in front of my org-roam
+  buffer names.
+#+begin_src emacs-lisp :tangle yes
+(defadvice! doom-modeline--buffer-file-name-roam-aware-a (orig-fun)
+  :around #'doom-modeline-buffer-file-name ; takes no args
+  (if (s-contains-p org-roam-directory (or buffer-file-name ""))
+      (replace-regexp-in-string
+       "\\(?:^\\|.*/\\)\\([0-9]\\{4\\}\\)\\([0-9]\\{2\\}\\)\\([0-9]\\{2\\}\\)[0-9]*-"
+       "◃(\\1-\\2-\\3) "
+       (subst-char-in-string ?_ ?  buffer-file-name))
+    (funcall orig-fun)))
+#+end_src
+
++ I don't really need line numbers.
+#+begin_src emacs-lisp :tangle yes
+;; I don't care about line numbers
+(setq display-line-numbers-type nil)
+#+end_src
+
++ It's the little things that make a house a home. Or a text editor a home.
+#+begin_src emacs-lisp :tangle yes
+;; better defaults
+(setq-default
+ delete-by-moving-to-trash t                      ; Delete files to trash
+ window-combination-resize t                      ; take new window space from all other windows (not just current)
+ x-stretch-cursor t                               ; Stretch cursor to the glyph width
+ uniquify-buffer-name-style 'forward)             ; This is my buffer. There are many like it but this one is mine
+#+end_src
+
++ Just mash those buttons to escape.
+#+begin_src emacs-lisp :tangle yes
+;; mash jk without thinking
+(setq evil-escape-unordered-key-sequence t)
+#+end_src
+
++ Sometimes I make up words and I want the spell checker to ignore them.
+#+begin_src emacs-lisp :tangle yes
+(setq ispell-personal-dictionary "/home/kevin/.config/aspell/.aspell.en.pws")
+#+end_src
+
++ You can't tell me where to go Emacs. I'll go past the end of the line if I
+  want to. Also, when I leave insert mode don't move my cursor. Just leave it
+  where it is.
+#+begin_src emacs-lisp :tangle yes
+(setq evil-move-beyond-eol t)           ; let me go where I want to go!
+(setq evil-move-cursor-back nil)        ; don't move my cursor around!
+(setq evil-cross-lines t)               ; you can move between lines if you want to
+(setq evil-kill-on-visual-paste nil)    ; Don't put overwritten text in the kill ring
+#+end_src
+
++ Something evil
+#+begin_src emacs-lisp :tangle yes
+(after! evil
+  ;; This fixes https://github.com/doomemacs/doomemacs/issues/6478
+  ;; Ref: https://github.com/emacs-evil/evil/issues/1630
+  (evil-select-search-module 'evil-search-module 'isearch))
+#+end_src
+
++ Sometimes I decide that I don't like my current line being highlighted. This
+  bit of my config comes and goes.
+#+begin_src emacs-lisp :tangle yes
+(remove-hook 'doom-first-buffer-hook #'global-hl-line-mode)
+#+end_src
+
++ If I didn't have undo I don't know what I'd do.
+#+begin_src emacs-lisp :tangle yes
+;; more better defaults
+(setq undo-limit 80000000                         ; Raise undo-limit to 80Mb
+      evil-want-fine-undo t                       ; By default while in insert all changes are one big blob. Be more granulated
+      auto-save-default t                         ; Save me from myself
+      truncate-string-ellipsis "…"               ; Unicode ellispis are nicer than "...", and also save /precious/ space
+      scroll-margin 2                             ; It's nice to maintain a little margin
+      inhibit-compacting-font-caches t            ; You're not allowed to use the compactor
+      recentf-max-saved-items 50)                 ; Saving and exiting has been slow lately. Maybe this will help?
+#+end_src
+
++ What time is it?
+#+begin_src emacs-lisp :tangle yes
+;; what time is it?
+(display-time-mode 1)
+(setq display-time-load-average nil)
+#+end_src
+
++ Without ~which-key~ I'd still be stuck in that first scratch buffer. It can get
+  a little clogged with the word /evil/ when you use /evil-mode/ so let's filter
+  that stuff out.
+#+begin_src emacs-lisp :tangle yes
+;; which key? this one.
+(setq which-key-idle-delay 0.0)
+(setq which-key-allow-multiple-replacements t)
+(after! which-key
+  (pushnew!
+   which-key-replacement-alist
+   '(("" . "\\`+?evil[-:]?\\(?:a-\\)?\\(.*\\)") . (nil . "◂\\1"))
+   '(("\\`g s" . "\\`evilem--?motion-\\(.*\\)") . (nil . "◃\\1"))
+   ))
+#+end_src
+
++ A tweak to get ~which-key~ dispatch working.
+#+begin_src emacs-lisp :tangle yes
+;; tell which-key to behave
+(setq which-key-use-C-h-commands t
+      prefix-help-command #'which-key-C-h-dispatch)
+
+(defadvice! fix-which-key-dispatcher-a (fn &rest args)
+  :around #'which-key-C-h-dispatch
+  (let ((keys (this-command-keys-vector)))
+    (if (equal (elt keys (1- (length keys))) ?\?)
+        (let ((keys (which-key--this-command-keys)))
+          (embark-bindings (seq-take keys (1- (length keys)))))
+      (apply fn args))))
+#+end_src
+
++ The ~avy~ package is incredibly useful for getting around a buffer. I don't want
+  it to limit itself to the current buffer or window only.
+#+begin_src emacs-lisp :tangle yes
+;; all of them!
+(setq avy-all-windows t)
+#+end_src
+
++ When I'm slicing and dicing windows I want them to default to splitting to the
+  right or to the bottom of the frame. Also, ask me what buffer to use in the
+  newly created window.
+#+begin_src emacs-lisp :tangle yes
+;; do the splits
+(setq evil-vsplit-window-right t
+      evil-split-window-below t)
+
+(defadvice! prompt-for-buffer (&rest _)
+  :after '(evil-window-split evil-window-vsplit)
+  (consult-buffer))
+#+end_src
+
++ Promptly prompt me per our previous promise
+#+begin_src emacs-lisp :tangle yes
+;; I like prompt prompts
+(setq company-minimum-prefix-length 1)
+(setq company-idle-delay 0.0)
+(setq company-tooltip-align-annotations t)
+(setq company-selection-wrap-around t)
+#+end_src
+
++ I prefer auto-fill-mode over visual-line-mode when I'm writing text.
+#+begin_src emacs-lisp :tangle yes
+(remove-hook 'text-mode-hook #'visual-line-mode)
+(add-hook 'text-mode-hook #'auto-fill-mode)
+#+end_src
+
++ It's always irked me that when I select a region the selection isn't deleted
+  when I paste new text. That's what I'm used to in most text based
+  environments. This should set that behavior.
+#+begin_src emacs-lisp :tangle yes
+;; delete the selection when pasting
+delete-selection-mode 1
+#+end_src
+
++ Let's try using ibuffer for a bit.
+#+begin_src emacs-lisp :tangle yes
+(setq ibuffer-use-other-window t)
+#+end_src
+
++ Let's load my custom keybindings that I put in separate file for reasons I no
+  longer remember. Oh, and my ~abbrev~ definitions that automagically fix many
+  common spelling mistakes.
+#+begin_src emacs-lisp :tangle yes
+;; keybinds
+(load! "bindings")
+
+;; abbrev mode definitions
+(load! "abbrev")
+#+end_src
+
+*** Helpful Functions
++ A helpful individual over on [[https://www.reddit.com/r/orgmode/comments/f63n53/is_there_an_easy_way_to_insert_an_image_link/fi46wpr/][reddit]] threw together this lovely function that
+  helps insert image links with a caption in ~org-mode~.
+#+begin_src emacs-lisp :tangle yes
+;; My default image directory. It's literally the name of the variable.
+(setq my-default-image-directory "~/Dropbox/Org/linked-images/")
+
+;; Function to aid in inserting org-mode image links.
+(defun insert-image-org-link (img caption)
+  "Insert an org image link, choosing the file with completion
+and starting from `my-default-image-directory'. This prompts for
+an optional caption (leave it empty for no caption)."
+  (interactive
+   (list (read-file-name
+          "Image: " my-default-image-directory nil t nil
+          (lambda (name)
+            (or (directory-name-p name)
+                (member (file-name-extension name)
+                        image-file-name-extensions))))
+         (read-string "Caption: ")))
+  (insert
+   (if (string-empty-p caption)
+       (format "[[%s]]" img)
+     (format "#+caption: %s\n[[%s]]" caption img))))
+#+end_src
+
++ I want to be able to insert an active timestamp with relative ease.
+#+begin_src emacs-lisp :tangle yes
+(defun kev/get-timestamp ()
+  "Calls org-time-stamp with 2 prefix arguments"
+  (interactive)
+  (org-time-stamp '(16) t))
+#+end_src
+
++ Open the file that I'm currently writing this in.
+#+begin_src emacs-lisp :tangle yes
+(defun org-open-config-file ()
+  (interactive)
+  (find-file "~/.doom.d/config.org"))
+#+end_src
+
++ A helper function that I stole from @jeet to reload this file after it's
+  tangled.
+#+begin_src emacs-lisp :tangle yes
+;; reload config file
+(defun kev/reload ()
+  "A simple command to make reloading my config easier."
+  (interactive)
+  (load! "config" doom-private-dir)
+  (message "Reloaded!"))
+#+end_src
+
+#+begin_src emacs-lisp :tangle yes
+(map! :leader
+      "h r c" #'kev/reload)
+#+end_src
+
++ Evaluate configuration and reload fonts.
+#+begin_src emacs-lisp :tangle yes
+;; a function to see my font tweaks quickly
+(defun evig ()
+  "Evaluate the current buffer and reload fonts."
+  (interactive)
+  (eval-buffer)
+  (doom/reload-font))
+#+end_src
+
++ I have an org document for each project I'm working on. When I take meeting
+  notes I'll enter the meeting as a new heading. This little guy, in combination
+  with a keybind, spits out the date formatted the way I like it.
+#+begin_src emacs-lisp :tangle yes
+;; what day is it?
+(defun today ()
+  "Insert string for today's date nicely formatted as yyyy-MM-dd, Day of the Week"
+  (interactive)                 ; permit invocation in minibuffer
+  (insert (format-time-string "%Y-%m-%d, %A")))
+#+end_src
+
++ A handy function I stole from @tecosaur to create a new org-mode buffer.
+#+begin_src emacs-lisp :tangle yes
+;; create new empty org-mode buffer
+(evil-define-command evil-buffer-org-new (count file)
+  "Creates a new ORG buffer replacing the current window, optionally
+   editing a certain FILE"
+  :repeat nil
+  (interactive "P<f>")
+  (if file
+      (evil-edit file)
+    (let ((buffer (generate-new-buffer "*new org*")))
+      (set-window-buffer nil buffer)
+      (with-current-buffer buffer
+        (org-mode)))))
+#+end_src
+
++ I want to tangle this configuration file when I save it.
+#+begin_src emacs-lisp :tangle yes
+;; tangle literate config on save
+(defun org-babel-tangle-config ()
+  (when (string-equal (buffer-file-name)
+                      (expand-file-name "~/.doom.d/config.org"))
+    (let ((org-config-babel-evaluate nil))
+      (org-babel-tangle))))
+
+  (add-hook 'org-mode-hook
+        (lambda ()
+          (add-hook 'after-save-hook #'org-babel-tangle-config)))
+#+end_src
+
++ A little helper function that let's you extract the url from an org-mode link
+  and copy it to the kill ring.
+#+begin_src emacs-lisp :tangle yes
+;; a useful function I took from (https://github.com/SqrtMinusOne/dotfiles/blob/master/.emacs.d/init.el)
+(defun kev/org-link-copy (&optional arg)
+  "Extract URL from org-mode link and add it to kill ring."
+  (interactive "P")
+  (let* ((link (org-element-lineage (org-element-context) '(link) t))
+         (type (org-element-property :type link))
+         (url (org-element-property :path link))
+         (url (concat type ":" url)))
+    (kill-new url)
+    (message (concat "Copied URL: " url))))
+#+end_src
+
++ I stumbled over someone's doom config that had some interesting bits and bobs
+  I wanted to try. This is a function that should make replacing selections of
+  text easier.
+#+begin_src emacs-lisp :tangle yes
+;; quickly replace selected text
+(defun kev/evil-quick-replace (beg end )
+  (interactive "r")
+  (when (evil-visual-state-p)
+    (evil-exit-visual-state)
+    (let ((selection (replace-regexp-in-string "/" "\\/" (regexp-quote (buffer-substring-no-properties beg end)) t t)))
+      (setq command-string (format "1,$s /%s/%s/g" selection selection))
+      (minibuffer-with-setup-hook
+          (lambda () (backward-char 2))
+        (evil-ex command-string)))))
+#+end_src
+
+** _Lookin' Good_
+*** Theme
++ I'm back to using the solid doom-snazzy theme.
+#+begin_src emacs-lisp :tangle yes
+;; Snazz
+(setq doom-theme 'doom-snazzy)
+#+end_src
+
+*** Fonts
++ I enjoy a nice looking font. I'm also a fan of eye candy. So things like
+  ligatures and code glyph appeal to me. I customized and built my own version
+  of Iosevka recently so that's what I'm using at the moment.
+#+begin_src emacs-lisp :tangle yes
+;; choose your fonts!
+(setq doom-font (font-spec :family "Bespoke Iosevka Mono" :size 20 :weight 'regular)
+      doom-variable-pitch-font (font-spec :family "Overpass Nerd Font" :size 18 :weight 'medium)
+      doom-unicode-font (font-spec :family "Noto Color Emoji"))
+(after! doom-themes
+  (setq doom-themes-enable-bold t
+        doom-themes-enable-italic t))
+(custom-set-faces!
+  '(font-lock-comment-face :slant italic)
+  '(font-lock-keyword-face :slant italic)
+  '(org-verse :slant italic))
+
+(setq org-fontify-quote-and-verse-blocks t)
+#+end_src
+
++ Mixing monospace and variable pitched fonts in org-mode gives you a visually
+  impressive workspace. Once again I am swiping a bit of config from the
+  impressive @tecosaur.
+#+begin_src emacs-lisp :tangle yes
+;; my pitches getting all mixed up
+(defvar mixed-pitch-modes '(org-mode LaTeX-mode markdown-mode gfm-mode Info-mode)
+  "Modes that `mixed-pitch-mode' should be enabled in, but only after UI initialisation.")
+(defun init-mixed-pitch-h ()
+  "Hook `mixed-pitch-mode' into each mode in `mixed-pitch-modes'.
+Also immediately enables `mixed-pitch-modes' if currently in one of the modes."
+  (when (memq major-mode mixed-pitch-modes)
+    (mixed-pitch-mode 1))
+  (dolist (hook mixed-pitch-modes)
+    (add-hook (intern (concat (symbol-name hook) "-hook")) #'mixed-pitch-mode)))
+(add-hook 'doom-init-ui-hook #'init-mixed-pitch-h)
+#+end_src
+
+*** Doom Dashboard
++ The first thing you see when you fire up Doom Emacs is the Doom Dashboard. I'm
+  using this glorious rainbow unicorn that's from some github error page.
+#+begin_src emacs-lisp :tangle yes
+;; fancy splash screen image
+(setq fancy-splash-image "~/.doom.d/misc/unbridled-unicorn.png")
+#+end_src
+
++ I wanted a more minimal dashboard so I removed the text menu
+#+begin_src emacs-lisp :tangle yes
+;; simplify the startup screen
+(remove-hook '+doom-dashboard-functions #'doom-dashboard-widget-shortmenu)
+(remove-hook '+doom-dashboard-functions #'doom-dashboard-widget-footer)
+(add-hook! '+doom-dashboard-mode-hook (hl-line-mode -1) (hide-mode-line-mode 1))
+(setq-hook! '+doom-dashboard-mode-hook evil-normal-state-cursor (list nil))
+#+end_src
+
+*** Modeline
++ When I see text in red I assume something has gone wrong. The default in Doom
+  is to show a the filename in red when there are unsaved changes. Let's go with
+  a slightly less alarming orange.
+#+begin_src emacs-lisp :tangle yes
+;; red is too aggressive, so let's make it orange
+(custom-set-faces!
+  '(doom-modeline-buffer-modified :foreground "orange"))
+#+end_src
+
++ This specifies exactly what items I want shown in the modeline. It also adds a
+  little padding on the right edge and increases it's overall height. I like a
+  thicc modeline.
+#+begin_src emacs-lisp :tangle yes
+;; add padding and height to the modeline
+(after! doom-modeline
+  (doom-modeline-def-modeline 'main
+    '(bar workspace-name window-number modals matches follow buffer-info remote-host buffer-position word-count parrot selection-info)
+    '(objed-state misc-info persp-name battery grip irc mu4e gnus github debug repl lsp minor-modes input-method indent-info buffer-encoding major-mode process vcs checker "  ")))
+
+(setq doom-modeline-height 30)
+#+end_src
+
++ A custom modeline for pdf files stolen from @jeet who stole it from @teco.
+#+begin_src emacs-lisp :tangle yes
+;; tecos pdf modeline
+(after! (pdf-tools doom-modeline)
+  (doom-modeline-def-segment pdf-icon
+    (concat
+     (doom-modeline-spc)
+     (doom-modeline-icon 'octicon "file-pdf" nil nil
+                         :face (if (doom-modeline--active)
+                                   'all-the-icons-red
+                                 'mode-line-inactive)
+                         :v-adjust 0.02)))
+
+  (doom-modeline-def-segment buffer-name
+    (concat
+     (doom-modeline-spc)
+     (doom-modeline--buffer-name)))
+
+  (defun doom-modeline-update-pdf-pages ()
+    "Update PDF pages."
+    (setq doom-modeline--pdf-pages
+          (concat " P"
+                  (number-to-string (eval `(pdf-view-current-page)))
+                  (propertize (concat "/" (number-to-string (pdf-cache-number-of-pages))) 'face 'doom-modeline-buffer-minor-mode))))
+
+  (doom-modeline-def-segment pdf-pages
+    "Display PDF pages."
+    (if (doom-modeline--active) doom-modeline--pdf-pages
+      (propertize doom-modeline--pdf-pages 'face 'mode-line-inactive)))
+
+  (doom-modeline-def-modeline 'pdf
+    '(bar window-number matches pdf-pages pdf-icon buffer-name)
+    '(misc-info major-mode process vcs))
+
+  (defun doom-set-pdf-modeline-h ()
+    "sets the pdf modeline"
+    (doom-modeline-set-modeline 'pdf))
+
+  (add-hook! 'pdf-view-mode-hook 'doom-set-pdf-modeline-h))
+#+end_src
+
+*** Package/Module UI
+**** Vertico
++ I use ~vertico~ and the Doom Emacs affiliated modules/packages as my completion
+  engine. I prefer using a childframe instead of a minibuffer. I used
+  vertico-posframe before it was added to doom but it's been integrated as a
+  module flag at this point.
+#+begin_src emacs-lisp :tangle yes
+;; vertico but posframey
+(after! doom-modeline
+  (vertico-posframe-mode 1)
+  (setq vertico-posframe-border-width 5)
+  (custom-set-faces!
+    '(vertico-posframe-border :inherit default :background "#2F3140")))
+
+(setq vertico-posframe-parameters
+      '((left-fringe . 8)
+        (right-fringe . 8)))
+#+end_src
+
+**** Avy
++ I barely use the avy package which is a shame because it's excellent. I do use
+  it to navigate between multiple windows. This was a hot tip from the mighty
+  meatball himself to make avy window numbers stand out more.
+#+begin_src emacs-lisp :tangle yes
+;; Make the ace window number easier to see
+(custom-set-faces!
+  '(aw-leading-char-face
+    :foreground "white" :background "#f7768e"
+    :weight bold :height 1.0 :box (:line-width 10 :color "#f7768e")))
+#+end_src
+
+**** Evil States
++ Texas. I'm just kidding. I like my cursor to change shape and color to make
+  blindingly obvious to my oblivious brain what modal state I'm in.
+#+begin_src emacs-lisp :tangle yes
+;; cursors do colors
+(setq evil-normal-state-cursor '("dodger blue" box))
+(setq evil-visual-state-cursor '("orange" hollow))
+(setq evil-insert-state-cursor '("yellow" bar))
+#+end_src
+
+**** Centaur Tabs
++ I like tab buffers but I wanted to add my own little design flair to the tab
+  icons. This changes the icons used for closing a tab and for showing when a
+  buffer has unsaved changes.
+#+begin_src emacs-lisp :tangle yes
+;; tweak those tabs
+(after! centaur-tabs
+  (setq centaur-tabs-height 36
+        centaur-tabs-close-button ""
+        centaur-tabs-modified-marker ""
+        centaur-tabs-set-bar 'over
+        centaur-tabs-gray-out-icons 'buffer))
+#+end_src
+
+**** Rainbow Mode
++ Hexcodes are colorized with the rainbow-mode package. Rainbow-mode is hooked
+  into org-mode and all programming modes.
+#+begin_src emacs-lisp :tangle yes
+;; I can see colors!
+(add-hook! org-mode 'rainbow-mode)
+(add-hook! prog-mode 'rainbow-mode)
+#+end_src
+
+*** Other
++ fringe-mode will add a little padding at the fringes of your frames. I'm a big
+  fan of [[https://www.youtube.com/watch?v=BIG_GVE-KiE][fringes]].
+#+begin_src emacs-lisp :tangle yes
+;; add fringes
+(set-fringe-mode 8)
+#+end_src
+
+** _Org Mode is Best Mode_
+*** Small but important
++ Give my headings their space!
+#+begin_src emacs-lisp :tangle yes
+;; stay out of my personal space
+(setq org-cycle-separator-lines -1)
+#+end_src
+
++ Something to do with editing invisible regions of org-mode
+#+begin_src emacs-lisp :tangle yes
+(setq org-fold-catch-invisible-edits 'smart)
+#+end_src
+
++ I agree with Tim. I think list bullets should change with depth.
+#+begin_src emacs-lisp :tangle yes
+(setq org-list-demote-modify-bullet '(("+" . "-") ("-" . "+") ("*" . "+") ("1." . "a.")))
+#+end_src
+
++ When I open a file link in org-mode what will the file open in by default?
+#+begin_src emacs-lisp :tangle yes
+;; set defaults for opening files
+(setq org-file-apps
+      '((remote . emacs)
+        (auto-mode . emacs)
+        (directory . emacs)
+        ("\\.mm\\'" . default)
+        ("\\.x?html?\\'" . default)
+        ("\\.pdf\\'" . default)
+        ("\\.epub\\'" . "foliate %s")))
+#+end_src
+
++ Ideally I'll keep all my TODO items in a master file. When I open my
+  org-agenda I don't want it to look anywhere else except that file.
+#+begin_src emacs-lisp :tangle yes
+;; Not all the agendas
+(setq org-agenda-files '("~/Dropbox/Org/manage-self.org"))
+#+end_src
+
++ Thank you @tecosaur for the wonderful [[https://github.com/tecosaur/org-pandoc-import][org-pandoc-import]] package. I want all
+  the text in org-mode please.
+#+begin_src emacs-lisp :tangle yes
+;; my org document wants to have a Word with you
+(use-package! org-pandoc-import :after org)
+#+end_src
+
++ I like nesting headlines and I want LaTeX to respect that when I use it to
+  pummel an org document into the shape of a pdf.
+#+begin_src emacs-lisp :tangle yes
+;; go deep!
+(setq org-export-headline-levels 5)
+#+end_src
+
++ This is something it took me a long time to find. I wanted to automatically
+  insert a timestamp into an org-mode document every time I modified and saved
+  it. This hook will insert a date and time under the the document header I call
+  ~#+modified~.
+#+begin_src emacs-lisp :tangle yes
+;; last modified hook
+(after! org
+  (setq time-stamp-active t
+    time-stamp-start "#\\+modified:[ \t]*"
+    time-stamp-end "$"
+    time-stamp-format "\[%Y-%02m-%02d %3a %02H:%02M\]")
+(add-hook 'before-save-hook 'time-stamp))
+#+end_src
+
+*** Make It Pretty!
++ I use org-mode to create task lists. Having keywords I can assign to a heading
+  helps with that.
+#+begin_src emacs-lisp :tangle yes
+;; this is a priorities
+(after! org
+  (setq org-priority-faces
+        '((65 :foreground "red" :weight bold)
+          (66 :foreground "orange" :weight bold)
+          (67 :foreground "yellow" :weight bold)
+          (68 :foreground "blue" :weight normal))
+        org-fancy-priorities-list '("HIGH" "MID" "LOW" "OPTIONAL")
+        org-todo-keywords '((sequence "TODO(t)" "INPROGRESS(i)" "WAIT(w)" "|" "DONE(d)" "CANCELLED(c)" "REMINDER(r)"))
+        org-todo-keyword-faces
+        '(("TODO" :foreground "#34f455" :weight bold :underline t)
+          ("INPROGRESS" :foreground "#f4f434" :weight normal :underline t)
+          ("WAIT" :foreground "#83cec8" :weight normal :underline nil)
+          ("DONE" :foreground "#a98bf4" :weight normal :strike-through t)
+          ("CANCELLED" :foreground "#818178" :weight normal :strike-through t)
+          ("REMINDER" :foreground "#8DDFF3" :weight normal :underline nil))))
+#+end_src
+
++ I find these face attributes to be the most pleasing for my org headings.
+#+begin_src emacs-lisp :tangle yes
+;; you got custom on my face
+(custom-set-faces!
+  '(outline-1 :weight extra-bold :height 1.4)
+  '(outline-2 :weight bold :height 1.2)
+  '(outline-3 :weight bold :height 1.15)
+  '(outline-4 :weight semi-bold :height 1.10)
+  '(outline-5 :weight semi-bold :height 1.08)
+  '(outline-6 :weight semi-bold :height 1.05)
+  '(outline-8 :weight semi-bold)
+  '(outline-9 :weight semi-bold))
+
+(custom-set-faces!
+  '(org-document-title :height 1.5))
+#+end_src
+
++ I did say /make it pretty/ did I not?
+#+begin_src emacs-lisp :tangle yes
+;; so pretty
+(add-hook 'org-mode-hook #'+org-pretty-mode)
+#+end_src
+
++ Who wants normal old bullets for their headings anyway?
+#+begin_src emacs-lisp :tangle yes
+;; you're a superstar!
+(after! org-superstar
+  (setq org-superstar-headline-bullets-list '("◉" "○" "✸" "•" "◆" "✜" "✤" "▹")
+        org-superstar-item-bullet-alist
+        '((?* . ?•)
+          (?+ . ?▸)
+          (?- . ?–))
+        org-superstar-prettify-item-bullets t ))
+#+end_src
+
++ A couple of things are going on in this next bit. I think the downward facing
+  triangle looks nicer than the ellipses for folded org trees. Also, I don't
+  need to see those stars before my pretty bullets. Also, the second, using
+  colorful icons helps me to prioritize tasks and it is nice to make those
+  priorities pop visually.
+#+begin_src emacs-lisp :tangle yes
+;; more fancy please
+(setq org-ellipsis " ▾ "
+      org-hide-leading-stars t
+      org-priority-highest ?A
+      org-priority-lowest ?E
+      org-priority-faces
+      '((?A . 'all-the-icons-red)
+        (?B . 'all-the-icons-orange)
+        (?C . 'all-the-icons-yellow)
+        (?D . 'all-the-icons-green)
+        (?E . 'all-the-icons-blue)))
+#+end_src
+
++ I replace a bunch of common org-mode specific words with a fancy glyph or
+  icon. I ripped this straight out of @tecosaurs config with some minor tweaks
+  and additions of my own.
+#+begin_src emacs-lisp :tangle yes
+;; why use words when have pictures?
+(after! org
+  (appendq! +ligatures-extra-symbols
+            `(:checkbox      "☐"
+              :pending       "■"
+              :checkedbox    "☑"
+              :list_property "∷"
+              :em_dash       "—"
+              :ellipses      "…"
+              :arrow_right   "→"
+              :arrow_left    "←"
+              :title         ""
+              :subtitle      "ʈ"
+              :author        ""
+              :date          ""
+              :property      ""
+              :options       "⌥"
+              :startup       "⏻"
+              :macro         "μ"
+              :html_head     ""
+              :html          ""
+              :latex_class   ""
+              :latex_header  ""
+              :beamer_header "β"
+              :latex         ""
+              :attr_latex    ""
+              :attr_html     ""
+              :attr_org      "🦄"
+              :begin_quote   "—"
+              :end_quote     "—"
+              :caption       "☰"
+              :header        "›"
+              :results       ""
+              :begin_export  ""
+              :end_export    ""
+              :properties    ""
+              :drawer        "▬"
+              :end           "∎"
+              :log           "⬓"
+              :email         ""
+              :logbook       ""
+              :modified      ""))
+  (set-ligatures! 'org-mode
+    :merge t
+    :checkbox      "[ ]"
+    :pending       "[-]"
+    :checkedbox    "[X]"
+    :list_property "::"
+    :em_dash       "---"
+    :ellipsis      "..."
+    :arrow_right   "->"
+    :arrow_left    "<-"
+    :title         "#+title:"
+    :subtitle      "#+subtitle:"
+    :author        "#+author:"
+    :date          "#+date:"
+    :property      "#+property:"
+    :options       "#+options:"
+    :startup       "#+startup:"
+    :macro         "#+macro:"
+    :html_head     "#+html_head:"
+    :html          "#+html:"
+    :latex_class   "#+latex_class:"
+    :latex_header  "#+latex_header:"
+    :beamer_header "#+beamer_header:"
+    :latex         "#+latex:"
+    :attr_latex    "#+attr_latex:"
+    :attr_html     "#+attr_html:"
+    :attr_org      "#+attr_org:"
+    :begin_quote   "#+begin_quote"
+    :end_quote     "#+end_quote"
+    :caption       "#+caption:"
+    :header        "#+header:"
+    :begin_export  "#+begin_export"
+    :end_export    "#+end_export"
+    :results       "#+RESULTS:"
+    :property      ":properties:"
+    :end           ":end:"
+    :drawer        ":drawer:"
+    :log           ":log:"
+    :email         "#+email:"
+    :logbook       ":logbook:"
+    :modified      "#+modified:")
+  (plist-put +ligatures-extra-symbols :name "⁍"))
+#+end_src
+
++ Force specific characters to be displayed instead of an emoji
+#+begin_src emacs-lisp :tangle yes
+(defvar emojify-disabled-emojis
+  '(;; Org
+    "◼" "☑" "☸" "⚙" "⏩" "⏪" "⬆" "⬇" "❓"
+    ;; Terminal powerline
+    "✔"
+    ;; Box drawing
+    "▶" "◀"
+    ;; I just want to see this as text
+    "©" "™")
+  "Characters that should never be affected by `emojify-mode'.")
+
+(defadvice! emojify-delete-from-data ()
+  "Ensure `emojify-disabled-emojis' don't appear in `emojify-emojis'."
+  :after #'emojify-set-emoji-data
+  (dolist (emoji emojify-disabled-emojis)
+    (remhash emoji emojify-emojis)))
+#+end_src
+
++ Oh yea, I still need to hook fancy priorities into org-mode.
+#+begin_src emacs-lisp :tangle yes
+;; More. Fancy.
+(add-hook! org-mode 'org-fancy-priorities-mode)
+#+end_src
+
++ Get out of here stars! Never talk to me or my Unicode bullets again.
+#+begin_src emacs-lisp :tangle yes
+;; get out of my face stars
+(setq org-hide-leading-stars t)
+#+end_src
+
++ Defines a minor mode to allow special forms such as /italics/, *bold*, _underline_
+  and =literal= to be editable when the cursor is over them, otherwise display the
+  proper value.
+#+begin_src emacs-lisp :tangle yes
+;; you will stay hidden until I summon you
+(use-package! org-appear
+  :hook (org-mode . org-appear-mode)
+  :config
+  (setq org-appear-autoemphasis t
+        org-appear-autosubmarkers t)
+  (run-at-time nil nil #'org-appear--set-elements))
+#+end_src
+
++ A little bit of configuration for the company-org-block package. It's just
+  another method of making it easier to insert org-src blocks.
+#+begin_src emacs-lisp :tangle yes
+(use-package! company-org-block
+  :after org
+  :config
+  (setq company-org-block-edit-style 'auto))
+
+(after! org
+  (set-company-backend! 'org-mode-hook '(company-org-block company-capf)))
+#+end_src
+
+** E-mail
++ I recently setup a Fastmail account and I'd like to start using it with mu4e.
+#+begin_src emacs-lisp :tangle yes
+(add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+
+;; Each path is relative to the path of the maildir you passed to mu
+(set-email-account! "fastmail"
+  '((mu4e-sent-folder       . "/Fastmail/Sent")
+    (mu4e-drafts-folder     . "/Fastmail/Drafts")
+    (mu4e-trash-folder      . "/Fastmail/Trash")
+    (mu4e-refile-folder     . "/Fastmail/Archive")
+    (user-mail-address      . "mail@kevinward.xyz")
+    (user-full-name         . "Kevin Ward")
+    (smtpmail-smtp-user     . "mail@kevinward.xyz")
+    (mu4e-compose-signature . "\nRegards,\nKevin Ward"))
+  t)
+
+;; Sending email via smtp
+(setq
+   message-send-mail-function   'smtpmail-send-it
+   smtpmail-default-smtp-server "smtp.fastmail.com"
+   smtpmail-smtp-server         "smtp.fastmail.com"
+   smtpmail-smtp-service        587
+   smtpmail-stream-type         'starttls)
+
+;; Some org-msg niceties
+(setq org-msg-greeting-fmt "\nHi%s,\n\n"
+      org-msg-signature "\n\n#+begin_signature\nRegards,\\\\\n@@html:<b>@@Kevin Ward@@html:</b>@@\n#+end_signature"
+      +org-msg-accent-color "black")
+
+;; Set custom command to sync and update mailbox
+(setq +mu4e-backend nil)
+(after! mu4e
+  (setq mu4e-get-mail-command "mbsync -c ~/.config/mbsync/mbsyncrc --all"))
+
+;; Some quick shortcuts to mail folders
+(setq mu4e-maildir-shortcuts
+      '(("/Fastmail/INBOX"   . ?i)
+        ("/Fastmail/Sent"    . ?S)))
+#+end_src
+
+** _The Experiments_
+*** Elfeed
++ A little RSS to feed my appetite for configuring something more than I use it.
+#+begin_src emacs-lisp :tangle yes
+;; Feed me
+(after! elfeed
+  (setq elfeed-search-filter "@2-month-ago +unread"))
+
+(setq elfeed-dashboard-file "~/Dropbox/Org/elfeed-dashboard.org")
+#+end_src
+
+*** Webjump
++ An oldie but a goodie. This is a quick way to open my most often visited
+  websites. The package plus a keybinding makes it easy.
+#+begin_src emacs-lisp :tangle yes
+;; webjump list
+(setq webjump-sites
+      '(("Discord" . "https://canary.discord.com/channels/@me")
+      ("Reddit - All" . "https://www.reddit.com/r/all/")
+      ("Youtube" . "https://www.youtube.com/")
+      ("Github" . "https://github.com/")
+      ("Gmail" . "https://gmail.google.com/mail/")
+      ("Reddit - Linux" . "https://www.reddit.com/r/linux/")))
+#+end_src
+
+*** Testing
++ I forgot to document this when I made the change and now I don't feel like it
+#+begin_src emacs-lisp :tangle yes
+;; The mask stays on
+(setq prettify-symbols-unprettify-at-point t)
+
+;; right and left padding
+(lambda () (progn
+        (setq left-margin-width 2)
+        (setq right-margin-width 2)
+        (set-window-buffer nil (current-buffer))))
+#+end_src
+
+*** Denote
++ Protesiloas has done it again. This time he brought the world his note taking
+  methodology. I'm going to play around with it.
+#+begin_src emacs-lisp :tangle yes
+(setq denote-directory (expand-file-name "~/Dropbox/Org/denote/"))
+#+end_src
+
+*** Conf-mode
++ This is a built-in mode meant for editing configuration files. Many of my
+  config files have no file extension and will start in Fundamental Mode. I'd
+  like them to be recognized as conf files.
+#+begin_src emacs-lisp :tangle yes
+;; recognize config files that have no file extension
+(add-to-list 'auto-mode-alist
+             '("/home/kevin/.config/sway/config.d/*" . conf-mode)
+             '("/home/kevin/.config/sway/cheatsheet*" . conf-mode))
+#+end_src
+
+*** Emacs Daemon Fix
++ I've always had strange issues with emacsclient and doom related to fonts,
+  themes, and the dashboard. This is a possible fix.
+#+begin_src emacs-lisp :tangle yes
+(defun load-doom-snazzy-theme (frame)
+  (select-frame frame)
+  (load-theme 'doom-snazzy t))
+
+(if (daemonp)
+    (add-hook 'after-make-frame-functions #'load-doom-snazzy-theme)
+  (load-theme 'doom-snazzy t))
+#+end_src
+
+*** Org-Glossary
++ A lovely package created by tecosaur. I'm trying it out of curiosity.
+#+begin_src emacs-lisp :tangle yes
+;; org-glossary
+(use-package! org-glossary
+  :hook (org-mode . org-glossary-mode))
+#+end_src
+
+*** Dirvish
++ A file manager that replaces dired. It's supposed to be better than dired or
+  ranger.
+#+begin_src elisp :tangle no
+(setq dired-kill-when-opening-new-dired-buffer t) ; added in emacs 28
+(setq dired-clean-confirm-killing-deleted-buffers nil)
+
+(use-package dirvish
+  :init
+  (dirvish-override-dired-mode)
+  :custom
+  ;; Go back home? Just press `bh'
+  (dirvish-bookmark-entries
+   '(("h" "~/"                          "Home")
+     ("d" "~/Downloads/"                "Downloads")
+     ("c" "~/.config/"                  "Config")
+     ("t" "~/.local/share/Trash/files/" "TrashCan")))
+  (dirvish-header-line-format '(:left (path) :right (free-space)))
+  (dirvish-mode-line-format ; it's ok to place string inside
+   '(:left (sort file-time " " file-size symlink) :right (omit yank index)))
+  ;; Don't worry, Dirvish is still performant even you enable all these attributes
+  (dirvish-attributes '(all-the-icons file-size collapse subtree-state vc-state git-msg))
+  ;; Maybe the icons are too big to your eyes
+  (dirvish-all-the-icons-height 0.8)
+  ;; In case you want the details at startup like `dired'
+  ;; (dirvish-hide-details nil)
+  :config
+  ;;(dirvish-peek-mode)
+  ;; Dired options are respected except a few exceptions, see *In relation to Dired* section above
+  (setq dired-dwim-target t)
+  (setq delete-by-moving-to-trash t)
+  ;; Enable mouse drag-and-drop files to other applications
+  (setq dired-mouse-drag-files t)                   ; added in Emacs 29
+  (setq mouse-drag-and-drop-region-cross-program t) ; added in Emacs 29
+  ;; Make sure to use the long name of flags when exists
+  ;; eg. use "--almost-all" instead of "-A"
+  ;; Otherwise some commands won't work properly
+  (setq dired-listing-switches
+        "-l --almost-all --human-readable --time-style=long-iso --group-directories-first --no-group")
+  :bind
+  ("C-c f" . dirvish-fd))
+#+end_src
+
+*** Treemacs
++ Fix issue with childframes
+#+begin_src emacs-lisp :tangle yes
+(setq treemacs-read-string-input 'from-minibuffer)
+#+end_src
+
+*** LSP Mode
++ I'm re-enabling some GUI elements that Doom disables by default.
+#+begin_src emacs-lisp :tangle yes
+(after! lsp-ui
+  (setq lsp-ui-sideline-enable t
+        lsp-ui-sideline-show-code-actions t
+        lsp-ui-sideline-show-diagnostics t
+        lsp-ui-sideline-show-hover nil
+        lsp-log-io nil
+        lsp-lens-enable t ; not working properly with ccls!
+        lsp-diagnostics-provider :auto
+        lsp-enable-symbol-highlighting t
+        lsp-headerline-breadcrumb-enable nil
+        lsp-headerline-breadcrumb-segments '(symbols)))
+#+end_src
+
+*** PKGBUILD
+#+begin_src emacs-lisp :tangle yes
+(use-package! pkgbuild-mode
+  :commands (pkgbuild-mode)
+  :mode "/PKGBUILD$")
+#+end_src
+
+*** org-pile
++ This looks interesting. I use the pile system in real life.
+#+begin_src emacs-lisp :tangle no
+(defvar org-pile-file "/tmp/pile.org")
+(defvar org-pile-buffer "*org-pile*")
+
+(defun org-pile-add ()
+  (interactive)
+  (let ((org-capture-templates `(("x" "pile" entry
+                                  (file ,org-pile-file)
+                                  "* %a" :immediate-finish t)))
+        (org-id-link-to-org-use-id 'create-if-interactive))
+    (org-capture nil "x")
+    (with-current-buffer (org-pile--get-buffer)
+      (save-buffer))))
+
+(defun org-pile-show ()
+  (interactive)
+  (pop-to-buffer (org-pile--get-buffer)))
+
+(defun org-pile-link-hint-open-link ()
+  "Open the pile and open one link."
+  (interactive)
+  (org-pile-show)
+  (call-interactively #'link-hint-open-link))
+
+(defun org-pile--get-buffer ()
+  (or (get-buffer org-pile-buffer)
+      (with-current-buffer (find-file-noselect org-pile-file)
+        (rename-buffer org-pile-buffer)
+        (current-buffer))))
+
+(set-popup-rule! org-pile-buffer :side 'left :width 0.2)
+
+(map! :leader
+      "o p" #'org-pile-show
+      "p a" #'org-pile-add
+      "p l" #'org-pile-link-hint-open-link)
+#+end_src
