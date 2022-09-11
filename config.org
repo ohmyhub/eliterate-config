@@ -1,12 +1,12 @@
 #+title: Eliterate Config
 #+author: Kevin Ward
 #+email: mail@kevinward.xyz
-#+modified: [2022-09-11 Sun 16:31]
+#+modified: [2022-09-11 Sun 16:34]
 :drawer:
 #+options: title:nil H:4 toc:nil
 #+html: <p align="center"><img src="misc/unbridled-unicorn.png" width=300 height=300/></p>
 #+html: <p align="center"><a href="https://orgmode.org"><img src="https://img.shields.io/badge/Org-literate%20config-%2377aa99?style=flat-square&logo=org&logoColor=white"></a></p>
-#+html: <p align="center"><a href="https://codeberg.org/ohmyberg/.lapdots/src/branch/main/.doom.d/config.org"><img src="https://img.shields.io/badge/THIS%20IS%20A%20BIG%20COLORFUL%20BADGE%20THAT%20DOES%20NOTHING-orange?style=for-the-badge&labelColor=orange"></a></p>
+#+html: <p align="center"><a href="https://github.com/ohmyhub/eliterate-config"><img src="https://img.shields.io/badge/THIS%20IS%20A%20BIG%20COLORFUL%20BADGE%20THAT%20DOES%20NOTHING-orange?style=for-the-badge&labelColor=orange"></a></p>
 :end:
 
 * _Eliterate Config: A hot mess_
