@@ -31,10 +31,10 @@
 ;; not org packages
 ;;
 ;; hot fresh themes
-;;(unpin! doom-themes)
+(unpin! doom-themes)
 
 ;; modeline
-;;(unpin! doom-modeline)
+(unpin! doom-modeline)
 
 ;; hot fresh terminal
 (unpin! vterm)
@@ -65,7 +65,9 @@
 ;; PKGBUILD mode
 (package! pkgbuild-mode)
 
-;; don't allow native compilation
-(package! with-editor :recipe (:build (:not native-compile)))
-(package! vterm :recipe (:build (:not native-compile)))
-(package! evil-collection :recipe (:build (:not native-compile)))
+(package! altcaps
+  :recipe (:host github
+           :repo "protesilaos/altcaps"))
+
+;; straight workaround
+(package! straight :pin "3eca39d")

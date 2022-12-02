@@ -20,13 +20,12 @@
        ;;layout            ; auie,ctsrnm is the superior home row
 
        :completion
-       company            ; the ultimate code completion backend
+       company             ; the ultimate code completion backend
        ;;helm              ; the *other* search engine for love and life
        ;;ido               ; the other *other* search engine...
        ;;ivy               ; a search engine for love and life
        (vertico            ; the search engine of the future
-        +icons
-        +childframe)
+        +icons)
 
        :ui
        ;;deft              ; notational velocity for Emacs
@@ -54,7 +53,7 @@
        (window-select      ; visually switch windows
         +numbers)
        workspaces          ; tab emulation, persistence & separate workspaces
-       ;;zen               ; distraction-free coding or writing
+       zen                 ; distraction-free coding or writing
 
        :editor
        (evil +everywhere)  ; come to the dark side, we have cookies
@@ -215,9 +214,3 @@
        :config
        literate
        (default +bindings +smartparens))
-
-;; put in $DOOMDIR/init.el
-(defadvice! doom--fix-loaddefs-generate--parse-file-a (fn &rest args)
-  :around #'loaddefs-generate--parse-file
-  (let (emacs-lisp-mode-hook)
-    (apply fn args)))

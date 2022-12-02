@@ -1,7 +1,7 @@
 #+title: Eliterate Config
 #+author: Kevin Ward
 #+email: mail@kevinward.xyz
-#+modified: [2022-09-11 Sun 16:34]
+#+modified: [2022-10-07 Fri 10:39]
 :drawer:
 #+options: title:nil H:4 toc:nil
 #+html: <p align="center"><img src="misc/unbridled-unicorn.png" width=300 height=300/></p>
@@ -294,7 +294,7 @@ an optional caption (leave it empty for no caption)."
 (defun kev/reload ()
   "A simple command to make reloading my config easier."
   (interactive)
-  (load! "config" doom-private-dir)
+  (load! "config" doom-user-dir)
   (message "Reloaded!"))
 #+end_src
 
@@ -517,7 +517,7 @@ Also immediately enables `mixed-pitch-modes' if currently in one of the modes."
   engine. I prefer using a childframe instead of a minibuffer. I used
   vertico-posframe before it was added to doom but it's been integrated as a
   module flag at this point.
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
 ;; vertico but posframey
 (after! doom-modeline
   (vertico-posframe-mode 1)
@@ -566,7 +566,7 @@ Also immediately enables `mixed-pitch-modes' if currently in one of the modes."
   fan of [[https://www.youtube.com/watch?v=BIG_GVE-KiE][fringes]].
 #+begin_src emacs-lisp :tangle yes
 ;; add fringes
-(set-fringe-mode 8)
+(set-fringe-mode 10)
 #+end_src
 
 ** _Org Mode is Best Mode_
@@ -958,7 +958,7 @@ Also immediately enables `mixed-pitch-modes' if currently in one of the modes."
 *** Emacs Daemon Fix
 + I've always had strange issues with emacsclient and doom related to fonts,
   themes, and the dashboard. This is a possible fix.
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
 (defun load-doom-snazzy-theme (frame)
   (select-frame frame)
   (load-theme 'doom-snazzy t))
@@ -984,7 +984,7 @@ Also immediately enables `mixed-pitch-modes' if currently in one of the modes."
 
 *** LSP Mode
 + I'm re-enabling some GUI elements that Doom disables by default.
-#+begin_src emacs-lisp :tangle yes
+#+begin_src emacs-lisp :tangle no
 (after! lsp-ui
   (setq lsp-ui-sideline-enable t
         lsp-ui-sideline-show-code-actions t
