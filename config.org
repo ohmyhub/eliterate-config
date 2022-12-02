@@ -1,7 +1,7 @@
 #+title: Eliterate Config
 #+author: Kevin Ward
 #+email: mail@kevinward.xyz
-#+modified: [2022-10-07 Fri 10:39]
+#+modified: [2022-12-02 Fri 01:21]
 :drawer:
 #+options: title:nil H:4 toc:nil
 #+html: <p align="center"><img src="misc/unbridled-unicorn.png" width=300 height=300/></p>
@@ -1007,7 +1007,7 @@ Also immediately enables `mixed-pitch-modes' if currently in one of the modes."
 
 *** org-pile
 + This looks interesting. I use the pile system in real life.
-#+begin_src emacs-lisp :tangle no
+#+begin_src emacs-lisp :tangle yes
 (defvar org-pile-file "/tmp/pile.org")
 (defvar org-pile-buffer "*org-pile*")
 
@@ -1040,7 +1040,7 @@ Also immediately enables `mixed-pitch-modes' if currently in one of the modes."
 (set-popup-rule! org-pile-buffer :side 'left :width 0.2)
 
 (map! :leader
-      "o p" #'org-pile-show
-      "p a" #'org-pile-add
-      "p l" #'org-pile-link-hint-open-link)
+      "k s" #'org-pile-show
+      "k a" #'org-pile-add
+      "k l" #'org-pile-link-hint-open-link)
 #+end_src
